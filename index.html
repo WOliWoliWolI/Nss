@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#14161c">
+<title>Quiet Quest</title>
+<style>
+  :root{
+    --bg:#14161c;
+    --card:#1c2029;
+    --border:#2a2e3a;
+    --border-strong:#3c4151;
+    --text:#edeef2;
+    --text-dim:#a6acba;
+    --text-faint:#6f7688;
+    --accent:#5b8dff;
+    --accent-soft:rgba(91,141,255,0.14);
+    --gold:#e0ab4a;
+    --amber:#e0ab4a;
+    --amber-soft:rgba(224,171,74,0.12);
+    --danger:#ef5b5b;
+    --success:#3fbd82;
+    --radius-lg:18px;
+    --radius-md:14px;
+    --radius-sm:10px;
+    --surface-sunken:#12141b;
+    --track-bg:#262b37;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; min-height:100%; }
+  body{
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:480px; margin:0 auto; padding:24px 16px 48px; }
+
+  header.top{ text-align:center; margin-bottom:18px; }
+  header.top h1{ font-size:1.5rem; margin:0; font-weight:800; }
+  header.top p{ margin:4px 0 0; color:var(--text-dim); font-size:0.85rem; }
+
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg);
+    box-shadow:0 1px 2px rgba(0,0,0,0.35); padding:18px; margin-bottom:14px;
+  }
+
+  /* summary */
+  .summary-card{ text-align:center; padding:22px 18px; }
+  .total-points{ font-size:2.2rem; font-weight:800; color:var(--accent); }
+  .total-points-label{ font-size:0.8rem; color:var(--text-dim); margin-top:2px; }
+
+  .today-row{ margin-top:18px; padding-top:16px; border-top:1px solid var(--border); }
+  .today-label{ display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-dim); margin-bottom:6px; }
+  .today-label b{ color:var(--text); }
+  .progress-track{ height:12px; border-radius:999px; background:var(--track-bg); border:1px solid var(--border); overflow:hidden; }
+  .progress-fill{ height:100%; border-radius:999px; background:var(--accent); transition:width 0.4s ease; }
+
+  .streak-row{ margin-top:14px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.92rem; font-weight:700; color:var(--amber); }
+  .streak-row .streak-num{ font-size:1.2rem; }
+
+  .goal-row{ margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.82rem; color:var(--text-dim); }
+  .goal-row input{
+    width:90px; text-align:center; background:var(--surface-sunken); border:1px solid var(--border-strong);
+    border-radius:var(--radius-sm); padding:7px 8px; font-family:inherit; font-size:0.88rem; color:var(--text);
+  }
+
+  /* tabs */
+  .tabbar{ display:flex; gap:6px; margin-bottom:14px; background:var(--track-bg); border:1px solid var(--border); border-radius:999px; padding:4px; }
+  .tabbar button{ flex:1; background:transparent; color:var(--text-dim); padding:9px 4px; border-radius:999px; font-size:0.84rem; font-family:inherit; font-weight:700; border:none; cursor:pointer; }
+  .tabbar button.active{ background:var(--text); color:var(--bg); }
+  .tabpanel{ display:none; }
+  .tabpanel.active{ display:block; }
+
+  .card h2.section-title{ margin:0 0 12px; font-size:1rem; font-weight:700; display:flex; justify-content:space-between; align-items:center; }
+  .card h2.section-title span.count{ font-size:0.74rem; font-weight:700; color:var(--text-faint); }
+
+  button{ font-family:inherit; font-weight:700; border:none; cursor:pointer; border-radius:var(--radius-sm); transition:transform 0.12s ease; }
+  button:active{ transform:scale(0.97); }
+  .btn-primary{ width:100%; padding:12px; font-size:0.96rem; background:var(--accent); color:#fff; }
+  .btn-primary:disabled{ opacity:0.4; cursor:not-allowed; }
+  .btn-secondary{ background:var(--track-bg); color:var(--text); border:1px solid var(--border-strong); }
+  .btn-wrong{ background:var(--track-bg); color:var(--text); border:1px solid var(--border-strong); }
+  .btn-right{ background:var(--success); color:#fff; }
+
+  /* add task form */
+  .add-row{ display:flex; gap:8px; }
+  .add-row input[type=text]{
+    flex:1; background:var(--surface-sunken); border:1px solid var(--border-strong); border-radius:var(--radius-sm);
+    padding:10px 12px; color:var(--text); font-family:inherit; font-size:0.95rem;
+  }
+  .add-row input[type=text]:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+
+  .chips{ display:flex; gap:8px; margin:12px 0; flex-wrap:wrap; }
+  .chip{
+    flex:1; min-width:60px; text-align:center; padding:9px 0; border-radius:999px;
+    border:1px solid var(--border-strong); background:var(--surface-sunken); color:var(--text-dim); font-weight:700; font-size:0.86rem;
+  }
+  .chip.selected{ background:var(--accent); border-color:var(--accent); color:#fff; }
+
+  .type-chip.selected{ background:var(--text); border-color:var(--text); color:var(--bg); }
+
+  .add-submit{ padding:11px; width:100%; background:var(--text); color:var(--bg); font-size:0.92rem; margin-top:4px; }
+  .add-submit:disabled{ opacity:0.4; cursor:not-allowed; }
+  .count-note{ text-align:center; font-size:0.76rem; color:var(--text-faint); margin-top:9px; }
+
+  .field-label{ font-size:0.78rem; color:var(--text-dim); margin:2px 0 6px; }
+
+  /* picker */
+  .picked-task{ font-weight:700; font-size:1rem; text-align:center; padding:12px; background:var(--accent-soft); border:1px solid var(--accent); border-radius:var(--radius-sm); }
+  .answer-buttons{ display:flex; gap:10px; }
+  .answer-buttons button{ flex:1; padding:12px; font-size:0.9rem; }
+
+  /* lists */
+  ul.items{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  li.item{
+    display:flex; align-items:center; gap:11px; padding:11px 12px;
+    background:var(--surface-sunken); border:1px solid var(--border); border-radius:var(--radius-sm);
+    transition:opacity 0.32s ease, transform 0.32s ease, max-height 0.32s ease, margin 0.32s ease, padding 0.32s ease;
+    max-height:80px; overflow:hidden;
+  }
+  li.item.completing{ opacity:0; transform:scale(0.92); max-height:0; margin:0; padding-top:0; padding-bottom:0; border-width:0; }
+  li.item.done-today{ opacity:0.6; }
+  li.item.picked{ border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft); background:var(--accent-soft); }
+
+  .box{ flex-shrink:0; width:22px; height:22px; border-radius:7px; border:2px solid var(--border-strong); cursor:pointer; background:var(--surface-sunken); }
+  .box.checked{ background:var(--success); border-color:var(--success); color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.75rem; }
+  .item-name{ flex:1; font-size:0.93rem; word-break:break-word; }
+  .item-points{ font-size:0.78rem; font-weight:700; color:var(--gold); white-space:nowrap; }
+  .item-del{ flex-shrink:0; background:none; border:none; color:var(--text-faint); font-size:1rem; cursor:pointer; padding:2px 4px; }
+
+  .empty-state{ text-align:center; color:var(--text-faint); font-size:0.86rem; padding:20px 10px; }
+
+  /* flashcards */
+  .subtab-row{ display:flex; gap:8px; margin-bottom:14px; }
+  .subtab-row button{ flex:1; text-align:center; background:transparent; border:1px solid var(--border-strong); color:var(--text); padding:8px 14px; font-size:0.82rem; font-family:inherit; font-weight:700; border-radius:var(--radius-sm); cursor:pointer; }
+  .subtab-row button.active{ background:var(--text); color:var(--bg); border-color:var(--text); }
+  .study-status{ text-align:center; font-size:0.82rem; color:var(--text-dim); margin-bottom:14px; }
+  .flip-card{
+    background:var(--surface-sunken); border:1px solid var(--border-strong); border-radius:var(--radius-lg);
+    padding:30px 20px; min-height:130px; display:flex; align-items:center; justify-content:center;
+    text-align:center; font-size:1.1rem; line-height:1.5; cursor:pointer; margin-bottom:14px;
+  }
+  .study-empty{ text-align:center; color:var(--text-dim); font-size:0.88rem; padding:26px 14px; line-height:1.5; }
+  .search-row{ margin-bottom:12px; }
+  .search-row input{
+    width:100%; background:var(--surface-sunken); border:1px solid var(--border-strong); border-radius:var(--radius-sm);
+    padding:9px 12px; font-family:inherit; font-size:0.86rem; color:var(--text);
+  }
+  ul.cards-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; max-height:420px; overflow-y:auto; }
+  li.card-row{ background:var(--surface-sunken); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; }
+  .card-row-fields{ display:flex; flex-direction:column; gap:6px; }
+  .card-row-fields input{
+    background:var(--surface-sunken); border:1px solid var(--border); border-radius:8px; padding:8px 10px;
+    font-family:inherit; font-size:0.85rem; color:var(--text); width:100%;
+  }
+  .card-row-foot{ display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
+  .card-row-foot .due{ font-size:0.7rem; color:var(--text-faint); }
+
+  /* meditate */
+  .meditate-card{ text-align:center; padding:28px 18px; }
+  .timer-display{ font-size:2.5rem; font-weight:800; color:var(--text); letter-spacing:1px; margin-bottom:6px; }
+  .timer-sub{ color:var(--text-dim); font-size:0.82rem; margin-bottom:20px; line-height:1.4; }
+  .timer-buttons{ display:flex; gap:10px; }
+  .timer-buttons button{ flex:1; padding:13px; font-size:0.9rem; }
+  .meditate-stats{ margin-top:20px; padding-top:16px; border-top:1px solid var(--border); font-size:0.78rem; color:var(--text-dim); display:flex; justify-content:space-around; }
+  .meditate-stats div b{ display:block; color:var(--text); font-size:1.05rem; }
+  .wakelock-note{ margin-top:12px; font-size:0.72rem; color:var(--text-faint); }
+
+  .toast{
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(12px);
+    background:var(--text); color:var(--bg); padding:10px 18px; border-radius:999px; font-size:0.82rem;
+    opacity:0; transition:opacity 0.25s ease, transform 0.25s ease; z-index:30; pointer-events:none;
+    max-width:88%; text-align:center;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="top">
+    <h1>Quiet Quest</h1>
+    <p>Tasks, flashcards, and meditation — all in one point total.</p>
+  </header>
+
+  <section class="card summary-card">
+    <div class="total-points" id="totalPoints">0</div>
+    <div class="total-points-label">total points</div>
+
+    <div class="today-row">
+      <div class="today-label"><span>Today</span><span><b id="todayPoints">0</b> / <span id="goalDisplay">2000</span></span></div>
+      <div class="progress-track"><div class="progress-fill" id="todayFill" style="width:0%"></div></div>
+    </div>
+
+    <div class="streak-row"><span class="streak-num" id="streakNum">0</span><span id="streakWord">day streak</span></div>
+
+    <div class="goal-row">
+      <label for="goalInput">Daily goal</label>
+      <input type="number" id="goalInput" min="100" step="100" value="2000">
+    </div>
+  </section>
+
+  <div class="tabbar">
+    <button data-tab="tasks" class="active">Tasks</button>
+    <button data-tab="cards">Flashcards</button>
+    <button data-tab="meditate">Meditate</button>
+  </div>
+
+  <!-- TASKS -->
+  <div class="tabpanel active" id="tab-tasks">
+
+    <section class="card">
+      <h2 class="section-title">Lottery <span class="count" id="lotteryCount">0 / 30</span></h2>
+      <div class="add-row"><input type="text" id="lotteryNameInput" maxlength="60" placeholder="e.g. Go for a walk"></div>
+      <div class="chips" id="lotteryPointChips">
+        <div class="chip selected" data-value="100">+100</div>
+        <div class="chip" data-value="300">+300</div>
+        <div class="chip" data-value="500">+500</div>
+        <div class="chip" data-value="1000">+1000</div>
+      </div>
+      <button class="add-submit" id="addLotteryBtn">Add to lottery</button>
+
+      <ul class="items" id="lotteryList" style="margin-top:14px;"></ul>
+      <div class="empty-state" id="lotteryEmpty">Add a few things, then roll to get a random one.</div>
+
+      <button class="btn-primary" id="rollLotteryBtn" style="margin-top:14px;">Roll</button>
+      <div id="lotteryPickedWrap" style="display:none; margin-top:14px;">
+        <div class="picked-task" id="lotteryPickedText"></div>
+        <div class="answer-buttons" style="margin-top:10px;">
+          <button class="btn-wrong" id="lotteryRollAgainBtn">Roll again</button>
+          <button class="btn-right" id="lotteryDoBtn">Do it now</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Add a task</h2>
+      <div class="add-row"><input type="text" id="itemNameInput" maxlength="60" placeholder="e.g. Chop wood"></div>
+
+      <div class="field-label">Type</div>
+      <div class="chips" id="typeChips">
+        <div class="chip type-chip selected" data-type="todo">To-do</div>
+        <div class="chip type-chip" data-type="recurring">Recurring</div>
+      </div>
+
+      <div class="field-label">Points</div>
+      <div class="chips" id="pointChips">
+        <div class="chip selected" data-value="100">+100</div>
+        <div class="chip" data-value="300">+300</div>
+        <div class="chip" data-value="500">+500</div>
+        <div class="chip" data-value="1000">+1000</div>
+      </div>
+
+      <button class="add-submit" id="addItemBtn">Add task</button>
+      <div class="count-note" id="itemCountNote"></div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">To-dos <span class="count" id="todoCount">0 / 30</span></h2>
+      <ul class="items" id="todoList"></ul>
+      <div class="empty-state" id="todoEmpty">One-off tasks you'll do once, then they're gone.</div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Recurring tasks <span class="count" id="recurringCount">0 / 30</span></h2>
+      <ul class="items" id="recurringList"></ul>
+      <div class="empty-state" id="recurringEmpty">Daily tasks that reset automatically each day — set them once.</div>
+    </section>
+  </div>
+
+  <!-- CARDS -->
+  <div class="tabpanel" id="tab-cards">
+    <div class="subtab-row">
+      <button class="active" id="subtabStudy">Study</button>
+      <button id="subtabManage">Manage</button>
+    </div>
+
+    <div id="studyView">
+      <section class="card">
+        <div class="study-status" id="studyStatus"></div>
+        <div id="studyPlaying" style="display:none;">
+          <div class="flip-card" id="flipCard"></div>
+          <div class="answer-buttons" id="answerButtonsBack" style="display:none;">
+            <button class="btn-wrong" id="btnWrong">Got it wrong</button>
+            <button class="btn-right" id="btnRight">Got it right (+10)</button>
+          </div>
+          <div id="showAnswerWrap"><button class="btn-primary" id="btnShowAnswer">Show answer</button></div>
+        </div>
+        <div id="studyEmpty" class="study-empty" style="display:none;"></div>
+        <button class="btn-primary" id="practiceAnywayBtn" style="display:none; margin-top:10px;">Practice anyway</button>
+      </section>
+    </div>
+
+    <div id="manageView" style="display:none;">
+      <section class="card">
+        <h2 class="section-title">Add a card</h2>
+        <div class="field-label">Front</div>
+        <div class="add-row" style="margin-bottom:10px;"><input type="text" id="cardFrontInput" maxlength="200" placeholder="Question or prompt"></div>
+        <div class="field-label">Back</div>
+        <div class="add-row"><input type="text" id="cardBackInput" maxlength="200" placeholder="Answer"></div>
+        <button class="add-submit" id="addCardBtn">Add card</button>
+        <div class="count-note" id="cardCountNote">0 / 1000 cards</div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Your cards</h2>
+        <div class="search-row"><input type="text" id="cardSearchInput" placeholder="Search cards…"></div>
+        <ul class="cards-list" id="cardsList"></ul>
+        <div class="empty-state" id="cardsEmptyState">No cards yet. Add one above.</div>
+      </section>
+    </div>
+  </div>
+
+  <!-- MEDITATE -->
+  <div class="tabpanel" id="tab-meditate">
+    <section class="card meditate-card">
+      <div class="timer-display" id="timerDisplay">00:00</div>
+      <div class="timer-sub">+10 points every full minute while running</div>
+      <div class="timer-buttons">
+        <button class="btn-secondary" id="timerResetBtn">Reset</button>
+        <button class="btn-primary" id="timerToggleBtn" style="flex:2;">Begin</button>
+      </div>
+      <div class="meditate-stats">
+        <div><b id="sessionMinutesEl">0</b>this sitting</div>
+        <div><b id="totalMinutesEl">0</b>all-time minutes</div>
+      </div>
+      <div class="wakelock-note" id="wakelockNote"></div>
+    </section>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "quiet-quest-state-v8";
+  var MAX_PER_LIST = 30;
+  var MAX_CARDS = 1000;
+  var FLASHCARD_POINTS = 10;
+  var MEDITATION_POINTS_PER_MIN = 10;
+
+  var defaultState = {
+    lifetimePoints: 0,
+    dailyGoal: 2000,
+    todayDate: "",
+    todayPoints: 0,
+    streak: 0,
+    streakCountedToday: false,
+    todos: [],
+    recurringTasks: [],
+    lottery: [],
+    cards: [],
+    meditationMinutesTotal: 0
+  };
+
+  var state = loadState();
+  var selectedPointValue = 100;
+  var selectedLotteryPointValue = 100;
+  var selectedTaskType = "todo";
+  var cardSearchTerm = "";
+  var lotteryPicked = null; // id of the currently rolled lottery item
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return JSON.parse(JSON.stringify(defaultState));
+      var parsed = JSON.parse(raw);
+      var merged = Object.assign(JSON.parse(JSON.stringify(defaultState)), parsed);
+      if(!Array.isArray(merged.todos)) merged.todos = [];
+      if(!Array.isArray(merged.recurringTasks)) merged.recurringTasks = [];
+      if(!Array.isArray(merged.lottery)) merged.lottery = [];
+      if(!Array.isArray(merged.cards)) merged.cards = [];
+      return merged;
+    }catch(e){
+      return JSON.parse(JSON.stringify(defaultState));
+    }
+  }
+
+  var saveTimer = null;
+  function saveState(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveStateNow, 150);
+  }
+  function saveStateNow(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  var toastTimer = null;
+  function showToast(msg){
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2400);
+  }
+
+  // ============ DATE / STREAK ============
+
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  function addDaysStr(dateStr, n){
+    var p = dateStr.split("-").map(Number);
+    var d = new Date(p[0], p[1]-1, p[2]);
+    d.setDate(d.getDate()+n);
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+
+  function ensureToday(){
+    var t = todayStr();
+    if(state.todayDate !== t){
+      if(state.todayDate){
+        var metGoal = state.todayPoints >= state.dailyGoal;
+        var nextExpected = addDaysStr(state.todayDate, 1);
+        if(!metGoal || t !== nextExpected){
+          state.streak = 0;
+        }
+      }
+      state.todayDate = t;
+      state.todayPoints = 0;
+      state.streakCountedToday = false;
+      saveState();
+    }
+  }
+
+  function addPoints(amount){
+    ensureToday();
+    state.lifetimePoints += amount;
+    state.todayPoints += amount;
+    checkGoal();
+    saveState();
+    renderSummary();
+  }
+
+  function checkGoal(){
+    if(state.todayPoints >= state.dailyGoal && !state.streakCountedToday){
+      state.streak += 1;
+      state.streakCountedToday = true;
+    }
+  }
+
+  function renderSummary(){
+    document.getElementById("totalPoints").textContent = state.lifetimePoints;
+    document.getElementById("todayPoints").textContent = state.todayPoints;
+    document.getElementById("goalDisplay").textContent = state.dailyGoal;
+    var pct = Math.min(100, (state.todayPoints / state.dailyGoal) * 100);
+    document.getElementById("todayFill").style.width = pct + "%";
+    document.getElementById("streakNum").textContent = state.streak;
+    document.getElementById("streakWord").textContent = state.streak === 1 ? "day streak" : "day streak";
+    var goalInput = document.getElementById("goalInput");
+    if(document.activeElement !== goalInput) goalInput.value = state.dailyGoal;
+  }
+
+  document.getElementById("goalInput").addEventListener("change", function(e){
+    var v = parseInt(e.target.value, 10);
+    if(!v || v < 1) v = 2000;
+    state.dailyGoal = v;
+    checkGoal();
+    saveState();
+    renderSummary();
+  });
+
+  // ============ TASKS ============
+
+  function listFor(name){
+    if(name === "todo") return state.todos;
+    return state.recurringTasks;
+  }
+
+  function renderTaskList(listName, ulId, emptyId, countId){
+    var arr = listFor(listName);
+    var ul = document.getElementById(ulId);
+    var empty = document.getElementById(emptyId);
+    ul.innerHTML = "";
+
+    var today = todayStr();
+
+    arr.forEach(function(item){
+      var doneToday = listName === "recurring" && item.lastCompletedDate === today;
+      var li = document.createElement("li");
+      li.className = "item" + (doneToday ? " done-today" : "");
+      li.dataset.id = item.id;
+
+      var box = document.createElement("div");
+      box.className = "box" + (doneToday ? " checked" : "");
+      if(doneToday) box.textContent = "✓";
+      if(!doneToday) box.addEventListener("click", function(){ completeTask(listName, item.id); });
+
+      var name = document.createElement("div");
+      name.className = "item-name";
+      name.textContent = item.name + (doneToday ? " — done today" : "");
+
+      var pts = document.createElement("div");
+      pts.className = "item-points";
+      pts.textContent = "+" + item.points;
+
+      var del = document.createElement("button");
+      del.className = "item-del";
+      del.setAttribute("aria-label", "Delete task");
+      del.textContent = "✕";
+      del.addEventListener("click", function(){ deleteTask(listName, item.id); });
+
+      li.appendChild(box);
+      li.appendChild(name);
+      li.appendChild(pts);
+      li.appendChild(del);
+      ul.appendChild(li);
+    });
+
+    empty.style.display = arr.length === 0 ? "block" : "none";
+    document.getElementById(countId).textContent = arr.length + " / " + MAX_PER_LIST;
+  }
+
+  function renderAllTasks(){
+    renderTaskList("todo", "todoList", "todoEmpty", "todoCount");
+    renderTaskList("recurring", "recurringList", "recurringEmpty", "recurringCount");
+    document.getElementById("addItemBtn").disabled = listFor(selectedTaskType).length >= MAX_PER_LIST;
+    renderLottery();
+  }
+
+  function completeTask(listName, id){
+    var arr = listFor(listName);
+    var idx = arr.findIndex(function(i){ return i.id === id; });
+    if(idx === -1) return;
+    var item = arr[idx];
+
+    if(listName === "recurring"){
+      item.lastCompletedDate = todayStr();
+      addPoints(item.points);
+      saveState();
+      renderAllTasks();
+      return;
+    }
+
+    // to-dos: award points, then remove with a short fade
+    var li = document.querySelector('#todoList li.item[data-id="' + id + '"]');
+    if(li) li.classList.add("completing");
+    addPoints(item.points);
+
+    setTimeout(function(){
+      var stillIdx = arr.findIndex(function(i){ return i.id === id; });
+      if(stillIdx !== -1) arr.splice(stillIdx, 1);
+      saveState();
+      renderAllTasks();
+    }, 300);
+  }
+
+  function deleteTask(listName, id){
+    var arr = listFor(listName);
+    var idx = arr.findIndex(function(i){ return i.id === id; });
+    if(idx !== -1) arr.splice(idx, 1);
+    saveState();
+    renderAllTasks();
+  }
+
+  function addTask(type, name, points){
+    var arr = listFor(type);
+    if(arr.length >= MAX_PER_LIST){ showToast("That list is full at " + MAX_PER_LIST + " tasks."); return; }
+    var trimmed = name.trim();
+    if(!trimmed){ showToast("Give the task a name first."); return; }
+    var task = { id: uid(), name: trimmed, points: points };
+    if(type === "recurring") task.lastCompletedDate = null;
+    arr.push(task);
+    saveState();
+    renderAllTasks();
+  }
+
+  document.querySelectorAll("#typeChips .chip").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      document.querySelectorAll("#typeChips .chip").forEach(function(c){ c.classList.remove("selected"); });
+      chip.classList.add("selected");
+      selectedTaskType = chip.getAttribute("data-type");
+      document.getElementById("addItemBtn").disabled = listFor(selectedTaskType).length >= MAX_PER_LIST;
+    });
+  });
+
+  document.querySelectorAll("#pointChips .chip").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      document.querySelectorAll("#pointChips .chip").forEach(function(c){ c.classList.remove("selected"); });
+      chip.classList.add("selected");
+      selectedPointValue = parseInt(chip.getAttribute("data-value"), 10);
+    });
+  });
+
+  document.getElementById("addItemBtn").addEventListener("click", function(){
+    var input = document.getElementById("itemNameInput");
+    addTask(selectedTaskType, input.value, selectedPointValue);
+    input.value = "";
+    input.focus();
+  });
+  document.getElementById("itemNameInput").addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); document.getElementById("addItemBtn").click(); }
+  });
+
+  // ---- lottery ----
+
+  function renderLottery(){
+    var ul = document.getElementById("lotteryList");
+    var empty = document.getElementById("lotteryEmpty");
+    ul.innerHTML = "";
+
+    state.lottery.forEach(function(item){
+      var li = document.createElement("li");
+      li.className = "item" + (lotteryPicked === item.id ? " picked" : "");
+      li.dataset.id = item.id;
+
+      var box = document.createElement("div");
+      box.className = "box";
+      box.style.cursor = "default";
+
+      var name = document.createElement("div");
+      name.className = "item-name";
+      name.textContent = item.name;
+
+      var pts = document.createElement("div");
+      pts.className = "item-points";
+      pts.textContent = "+" + item.points;
+
+      var del = document.createElement("button");
+      del.className = "item-del";
+      del.setAttribute("aria-label", "Remove from lottery");
+      del.textContent = "✕";
+      del.addEventListener("click", function(){ deleteLotteryItem(item.id); });
+
+      li.appendChild(box);
+      li.appendChild(name);
+      li.appendChild(pts);
+      li.appendChild(del);
+      ul.appendChild(li);
+    });
+
+    empty.style.display = state.lottery.length === 0 ? "block" : "none";
+    document.getElementById("lotteryCount").textContent = state.lottery.length + " / " + MAX_PER_LIST;
+    document.getElementById("addLotteryBtn").disabled = state.lottery.length >= MAX_PER_LIST;
+
+    renderLotteryPicked();
+  }
+
+  function renderLotteryPicked(){
+    var wrap = document.getElementById("lotteryPickedWrap");
+    var item = state.lottery.find(function(i){ return i.id === lotteryPicked; });
+    if(!item){
+      lotteryPicked = null;
+      wrap.style.display = "none";
+      return;
+    }
+    wrap.style.display = "block";
+    document.getElementById("lotteryPickedText").textContent = item.name + "  (+" + item.points + ")";
+  }
+
+  function addLotteryItem(name, points){
+    if(state.lottery.length >= MAX_PER_LIST){ showToast("Your lottery is full at " + MAX_PER_LIST + " entries."); return; }
+    var trimmed = name.trim();
+    if(!trimmed){ showToast("Give the entry a name first."); return; }
+    state.lottery.push({ id: uid(), name: trimmed, points: points });
+    saveState();
+    renderLottery();
+  }
+
+  function deleteLotteryItem(id){
+    state.lottery = state.lottery.filter(function(i){ return i.id !== id; });
+    if(lotteryPicked === id) lotteryPicked = null;
+    saveState();
+    renderLottery();
+  }
+
+  function rollLottery(){
+    if(state.lottery.length === 0){ showToast("Add something to the lottery first."); return; }
+    var pool = state.lottery.filter(function(i){ return i.id !== lotteryPicked; });
+    if(pool.length === 0) pool = state.lottery;
+    lotteryPicked = pool[Math.floor(Math.random() * pool.length)].id;
+    renderLottery();
+    var li = document.querySelector('#lotteryList li.item[data-id="' + lotteryPicked + '"]');
+    if(li) li.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function doLotteryItem(){
+    var item = state.lottery.find(function(i){ return i.id === lotteryPicked; });
+    if(!item) return;
+    addPoints(item.points);
+    showToast("+" + item.points + " points!");
+    lotteryPicked = null;
+    renderLottery();
+  }
+
+  document.querySelectorAll("#lotteryPointChips .chip").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      document.querySelectorAll("#lotteryPointChips .chip").forEach(function(c){ c.classList.remove("selected"); });
+      chip.classList.add("selected");
+      selectedLotteryPointValue = parseInt(chip.getAttribute("data-value"), 10);
+    });
+  });
+
+  document.getElementById("addLotteryBtn").addEventListener("click", function(){
+    var input = document.getElementById("lotteryNameInput");
+    addLotteryItem(input.value, selectedLotteryPointValue);
+    input.value = "";
+    input.focus();
+  });
+  document.getElementById("lotteryNameInput").addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); document.getElementById("addLotteryBtn").click(); }
+  });
+
+  document.getElementById("rollLotteryBtn").addEventListener("click", rollLottery);
+  document.getElementById("lotteryRollAgainBtn").addEventListener("click", rollLottery);
+  document.getElementById("lotteryDoBtn").addEventListener("click", doLotteryItem);
+
+  // ============ FLASHCARDS ============
+
+  var studySession = { queue: [], showingBack: false, correct: 0, total: 0 };
+
+  function scheduleCorrect(card){
+    card.repetition = (card.repetition || 0) + 1;
+    if(card.repetition === 1) card.interval = 1;
+    else if(card.repetition === 2) card.interval = 6;
+    else card.interval = Math.round((card.interval || 1) * (card.ease || 2.5));
+    card.ease = Math.max(1.3, (card.ease || 2.5) + 0.1);
+    card.dueDate = Date.now() + card.interval * 86400000;
+  }
+  function scheduleIncorrect(card){
+    card.repetition = 0;
+    card.interval = 1;
+    card.ease = Math.max(1.3, (card.ease || 2.5) - 0.2);
+    card.dueDate = Date.now() + 86400000;
+  }
+  function shuffle(arr){
+    for(var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+  function dueCards(){
+    var now = Date.now();
+    return state.cards.filter(function(c){ return !c.dueDate || c.dueDate <= now; });
+  }
+  function startStudySession(forceAll){
+    var pool = forceAll ? state.cards.slice() : dueCards();
+    studySession.queue = shuffle(pool.map(function(c){ return c.id; }));
+    studySession.showingBack = false;
+    studySession.correct = 0;
+    studySession.total = 0;
+    renderStudy();
+  }
+
+  function renderStudy(){
+    var statusEl = document.getElementById("studyStatus");
+    var playingEl = document.getElementById("studyPlaying");
+    var emptyEl = document.getElementById("studyEmpty");
+    var practiceBtn = document.getElementById("practiceAnywayBtn");
+
+    if(state.cards.length === 0){
+      statusEl.textContent = "";
+      playingEl.style.display = "none";
+      practiceBtn.style.display = "none";
+      emptyEl.style.display = "block";
+      emptyEl.textContent = "No cards yet. Switch to Manage to add some.";
+      return;
+    }
+
+    if(studySession.queue.length === 0){
+      var due = dueCards();
+      if(due.length === 0 && studySession.total === 0){
+        statusEl.textContent = "";
+        playingEl.style.display = "none";
+        emptyEl.style.display = "block";
+        emptyEl.textContent = "No cards due right now. Come back later, or practice anyway.";
+        practiceBtn.style.display = "block";
+        return;
+      }
+      statusEl.textContent = studySession.total > 0
+        ? "Session complete — " + studySession.correct + " / " + studySession.total + " correct"
+        : "";
+      playingEl.style.display = "none";
+      emptyEl.style.display = "block";
+      emptyEl.textContent = studySession.total > 0 ? "Nicely done. Study again whenever you like." : "No cards due right now.";
+      practiceBtn.style.display = "block";
+      return;
+    }
+
+    emptyEl.style.display = "none";
+    playingEl.style.display = "block";
+    practiceBtn.style.display = "none";
+
+    var cardId = studySession.queue[0];
+    var card = state.cards.find(function(c){ return c.id === cardId; });
+    if(!card){ studySession.queue.shift(); renderStudy(); return; }
+
+    statusEl.textContent = studySession.queue.length + " card" + (studySession.queue.length === 1 ? "" : "s") + " remaining this sitting";
+    document.getElementById("flipCard").textContent = studySession.showingBack ? card.back : card.front;
+    document.getElementById("answerButtonsBack").style.display = studySession.showingBack ? "flex" : "none";
+    document.getElementById("showAnswerWrap").style.display = studySession.showingBack ? "none" : "block";
+  }
+
+  document.getElementById("btnShowAnswer").addEventListener("click", function(){ studySession.showingBack = true; renderStudy(); });
+  document.getElementById("practiceAnywayBtn").addEventListener("click", function(){ startStudySession(true); });
+
+  function answerCurrent(correct){
+    var cardId = studySession.queue.shift();
+    var card = state.cards.find(function(c){ return c.id === cardId; });
+    if(card){
+      if(correct){
+        scheduleCorrect(card);
+        addPoints(FLASHCARD_POINTS);
+        studySession.correct++;
+      }else{
+        scheduleIncorrect(card);
+        studySession.queue.push(cardId);
+      }
+      studySession.total++;
+    }
+    studySession.showingBack = false;
+    saveState();
+    renderStudy();
+  }
+  document.getElementById("btnWrong").addEventListener("click", function(){ answerCurrent(false); });
+  document.getElementById("btnRight").addEventListener("click", function(){ answerCurrent(true); });
+
+  function renderCardCount(){
+    document.getElementById("cardCountNote").textContent = state.cards.length + " / " + MAX_CARDS + " cards";
+    document.getElementById("addCardBtn").disabled = state.cards.length >= MAX_CARDS;
+  }
+
+  function renderCardsManage(){
+    renderCardCount();
+    var list = document.getElementById("cardsList");
+    var empty = document.getElementById("cardsEmptyState");
+    list.innerHTML = "";
+
+    var term = cardSearchTerm.trim().toLowerCase();
+    var visible = state.cards.filter(function(c){
+      if(!term) return true;
+      return c.front.toLowerCase().indexOf(term) !== -1 || c.back.toLowerCase().indexOf(term) !== -1;
+    });
+
+    empty.style.display = state.cards.length === 0 ? "block" : "none";
+
+    visible.forEach(function(card){
+      var li = document.createElement("li");
+      li.className = "card-row";
+
+      var fields = document.createElement("div");
+      fields.className = "card-row-fields";
+
+      var frontInput = document.createElement("input");
+      frontInput.type = "text";
+      frontInput.value = card.front;
+      frontInput.placeholder = "Front";
+      frontInput.addEventListener("input", function(){ card.front = frontInput.value; saveState(); });
+
+      var backInput = document.createElement("input");
+      backInput.type = "text";
+      backInput.value = card.back;
+      backInput.placeholder = "Back";
+      backInput.addEventListener("input", function(){ card.back = backInput.value; saveState(); });
+
+      fields.appendChild(frontInput);
+      fields.appendChild(backInput);
+
+      var foot = document.createElement("div");
+      foot.className = "card-row-foot";
+
+      var due = document.createElement("span");
+      due.className = "due";
+      due.textContent = card.dueDate ? (card.dueDate <= Date.now() ? "due now" : "due " + new Date(card.dueDate).toLocaleDateString()) : "new";
+
+      var del = document.createElement("button");
+      del.className = "item-del";
+      del.textContent = "✕";
+      del.addEventListener("click", function(){
+        state.cards = state.cards.filter(function(c){ return c.id !== card.id; });
+        saveState();
+        renderCardsManage();
+      });
+
+      foot.appendChild(due);
+      foot.appendChild(del);
+      li.appendChild(fields);
+      li.appendChild(foot);
+      list.appendChild(li);
+    });
+  }
+
+  document.getElementById("addCardBtn").addEventListener("click", function(){
+    if(state.cards.length >= MAX_CARDS){ showToast("Your deck is full at 1000 cards."); return; }
+    var front = document.getElementById("cardFrontInput").value.trim();
+    var back = document.getElementById("cardBackInput").value.trim();
+    if(!front || !back){ showToast("Fill in both sides of the card."); return; }
+    state.cards.push({ id: uid(), front: front, back: back, interval: 0, repetition: 0, ease: 2.5, dueDate: 0 });
+    document.getElementById("cardFrontInput").value = "";
+    document.getElementById("cardBackInput").value = "";
+    saveState();
+    renderCardsManage();
+  });
+
+  document.getElementById("cardSearchInput").addEventListener("input", function(e){
+    cardSearchTerm = e.target.value;
+    renderCardsManage();
+  });
+
+  document.getElementById("subtabStudy").addEventListener("click", function(){ setCardSubtab("study"); });
+  document.getElementById("subtabManage").addEventListener("click", function(){ setCardSubtab("manage"); });
+
+  function setCardSubtab(name){
+    document.getElementById("subtabStudy").classList.toggle("active", name === "study");
+    document.getElementById("subtabManage").classList.toggle("active", name === "manage");
+    document.getElementById("studyView").style.display = name === "study" ? "block" : "none";
+    document.getElementById("manageView").style.display = name === "manage" ? "block" : "none";
+    if(name === "study") startStudySession(false);
+    else renderCardsManage();
+  }
+
+  // ============ MEDITATE ============
+
+  var meditate = { running: false, startEpoch: 0, accumulatedMs: 0, minutesAwardedThisSession: 0, intervalId: null, wakeLockSentinel: null };
+  var wakeLockSupported = ("wakeLock" in navigator);
+  document.getElementById("wakelockNote").textContent = wakeLockSupported
+    ? "Keeps your screen awake while running, on supported browsers."
+    : "This browser can't keep the screen awake, but points still catch up correctly once you reopen the tab.";
+
+  function currentElapsedMs(){
+    if(meditate.running) return meditate.accumulatedMs + (Date.now() - meditate.startEpoch);
+    return meditate.accumulatedMs;
+  }
+  function formatTime(totalSeconds){
+    var m = Math.floor(totalSeconds / 60), s = totalSeconds % 60;
+    return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+  }
+  function renderMeditate(){
+    var elapsedMs = currentElapsedMs();
+    document.getElementById("timerDisplay").textContent = formatTime(Math.floor(elapsedMs / 1000));
+    document.getElementById("timerToggleBtn").textContent = meditate.running ? "Pause" : (elapsedMs > 0 ? "Resume" : "Begin");
+    document.getElementById("sessionMinutesEl").textContent = meditate.minutesAwardedThisSession;
+    document.getElementById("totalMinutesEl").textContent = state.meditationMinutesTotal;
+  }
+  function meditateTick(){
+    var elapsedMs = currentElapsedMs();
+    var minutesElapsed = Math.floor(elapsedMs / 60000);
+    while(meditate.minutesAwardedThisSession < minutesElapsed){
+      meditate.minutesAwardedThisSession++;
+      addPoints(MEDITATION_POINTS_PER_MIN);
+      state.meditationMinutesTotal++;
+    }
+    saveState();
+    renderMeditate();
+  }
+  function requestWakeLock(){
+    if(!wakeLockSupported) return;
+    navigator.wakeLock.request("screen").then(function(sentinel){
+      meditate.wakeLockSentinel = sentinel;
+      sentinel.addEventListener("release", function(){ meditate.wakeLockSentinel = null; });
+    }).catch(function(){});
+  }
+  function releaseWakeLock(){
+    if(meditate.wakeLockSentinel){ meditate.wakeLockSentinel.release().catch(function(){}); meditate.wakeLockSentinel = null; }
+  }
+
+  document.getElementById("timerToggleBtn").addEventListener("click", function(){
+    if(meditate.running){
+      meditate.accumulatedMs = currentElapsedMs();
+      meditate.running = false;
+      clearInterval(meditate.intervalId);
+      releaseWakeLock();
+      renderMeditate();
+    }else{
+      meditate.running = true;
+      meditate.startEpoch = Date.now();
+      meditate.intervalId = setInterval(meditateTick, 1000);
+      requestWakeLock();
+      meditateTick();
+    }
+  });
+  document.getElementById("timerResetBtn").addEventListener("click", function(){
+    meditate.running = false;
+    clearInterval(meditate.intervalId);
+    releaseWakeLock();
+    meditate.accumulatedMs = 0;
+    meditate.startEpoch = 0;
+    meditate.minutesAwardedThisSession = 0;
+    renderMeditate();
+  });
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "visible" && meditate.running){ meditateTick(); requestWakeLock(); }
+  });
+  window.addEventListener("focus", function(){ if(meditate.running) meditateTick(); });
+  window.addEventListener("pageshow", function(){ if(meditate.running) meditateTick(); });
+
+  // ============ TABS ============
+
+  var tabButtons = document.querySelectorAll(".tabbar button");
+  tabButtons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var tab = btn.getAttribute("data-tab");
+      tabButtons.forEach(function(b){ b.classList.toggle("active", b === btn); });
+      document.querySelectorAll(".tabpanel").forEach(function(p){ p.classList.remove("active"); });
+      document.getElementById("tab-" + tab).classList.add("active");
+      if(tab === "cards") setCardSubtab("study");
+    });
+  });
+
+  // ============ INIT ============
+
+  ensureToday();
+  renderSummary();
+  renderAllTasks();
+  renderCardCount();
+  renderMeditate();
+})();
+</script>
+
+</body>
+</html>
